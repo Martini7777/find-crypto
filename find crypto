@@ -1,0 +1,48 @@
+# crypto_project_finder.py
+
+from web3 import Web3
+import tweepy
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+# Ethereum Connection
+w3 = Web3(Web3.HTTPProvider('YOUR_ETHEREUM_NODE_URL'))
+
+# X (Twitter) API Authentication
+auth = tweepy.OAuthHandler("consumer_key", "consumer_secret")
+auth.set_access_token("access_token", "access_token_secret")
+api = tweepy.API(auth)
+
+# Fetch data from Ethereum (simplified)
+def get_new_contracts():
+    # Placeholder for scanning new contracts
+    return [{"address": "0x123", "name": "NewProject"}]
+
+# Fetch engagement data from X
+def get_x_engagement(project_name):
+    tweets = api.search_tweets(q=project_name, count=10)
+    engagement_score = sum([tweet.retweet_count + tweet.favorite_count for tweet in tweets])
+    return engagement_score
+
+# Analyze projects
+def analyze_projects(contracts):
+    analyzed_projects = []
+    for contract in contracts:
+        engagement = get_x_engagement(contract['name'])
+        analyzed_projects.append({
+            "name": contract['name'],
+            "engagement_score": engagement,
+            "address": contract['address']
+        })
+    return analyzed_projects
+
+# Flask API endpoint
+@app.route('/projects')
+def get_projects():
+    contracts = get_new_contracts()
+    projects = analyze_projects(contracts)
+    return jsonify(projects)
+
+if __name__ == '__main__':
+    app.run(debug=True)
